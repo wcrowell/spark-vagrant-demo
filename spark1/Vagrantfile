@@ -1,0 +1,44 @@
+VAGRANT_COMMAND = ARGV[0]
+# Set a variable for the IP address and Spark, Zookeeper, Scala versions to install at the top of the file, so we can change it easily.
+spark1_ip_address = "10.10.10.80"
+spark1_hostname = "spark1" 
+spark2_ip_address = "10.10.10.81"
+spark2_hostname = "spark2" 
+spark_version = "2.4.2"
+zookeeper_version = "3.4.14"
+scala_version = "2.12.8"
+
+Vagrant.configure("2") do |config|
+  # If ssh passed in, then change user to spark 
+  if VAGRANT_COMMAND == "ssh"
+    config.ssh.username = 'vagrant'
+  end
+
+  config.vm.define "spark1" do |spark1|
+    spark1.vm.provision "shell", path: "../common/spark-setup.sh", args: "#{spark1_ip_address} #{spark1_hostname} #{spark_version} #{zookeeper_version} #{scala_version}"
+    spark1.vm.synced_folder "../common/", "/common"
+    spark1.vm.box = "centos/7"
+ 
+    spark1.vm.network "private_network", ip: "#{spark1_ip_address}"
+    spark1.vm.hostname = "#{spark1_hostname}" 
+ 
+    spark1.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "256"
+    end
+  end
+
+  config.vm.define "spark2" do |spark2|
+    spark2.vm.provision "shell", path: "../common/spark-setup.sh", args: "#{spark2_ip_address} #{spark2_hostname} #{spark_version} #{zookeeper_version} #{scala_version}"
+    spark2.vm.synced_folder "../common/", "/common"
+    spark2.vm.box = "centos/7"
+ 
+    spark2.vm.network "private_network", ip: "#{spark2_ip_address}"
+    spark2.vm.hostname = "#{spark2_hostname}" 
+ 
+    spark2.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "256"
+    end
+  end
+end
